@@ -6,15 +6,15 @@ Polyfill providing backward compatibility in between the newest WebXR API and th
 
 If you use npm, run  `npm i magicleap-helio-webxr-polyfill`.
 
-To add it using import:
+Then add it at the top of your file using import:
 
 ```
 
-import 'magicleap-helio-webxr-polyfill'; // Needs to be the first import
+import 'magicleap-helio-webxr-polyfill';
 
 ```
 
-To add it with a script tag:
+or using script tag:
 
 ```
 <script src="https://unpkg.com/magicleap-helio-webxr-polyfill@latest/"></script>
