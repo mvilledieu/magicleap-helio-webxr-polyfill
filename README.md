@@ -1,5 +1,7 @@
 # Magic Leap Helio - Webxr Polyfill
 
+Polyfill providing backward compatibility in between the newest WebXR API and the WebXR API currently implemented in Helio (Lumin 0.96.0)
+
 ## Installing
 
 If you use npm, run  `npm i magicleap-helio-webxr-polyfill`.
