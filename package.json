@@ -1,0 +1,24 @@
+{
+  "name": "magicleap-helio-webxr-polyfill",
+  "version": "1.0.0",
+  "description": "",
+  "main": "HelioWebXRPolyfill.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mvilledieu/magicleap-helio-webxr-polyfill.git"
+  },
+  "keywords": [
+    "MagicLeap",
+    "WebXR",
+    "Helio"
+  ],
+  "author": "mvilledieu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mvilledieu/magicleap-helio-webxr-polyfill/issues"
+  },
+  "homepage": "https://github.com/mvilledieu/magicleap-helio-webxr-polyfill#readme"
+}
