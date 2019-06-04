@@ -17,7 +17,7 @@ import 'magicleap-helio-webxr-polyfill';
 or using script tag:
 
 ```
-<script src="https://unpkg.com/magicleap-helio-webxr-polyfill@latest/HelioWebXRPolyfill.js"></script>
+<script src="https://unpkg.com/magicleap-helio-webxr-polyfill@latest/HelioWebXRPolyfill"></script>
 ```
 
 More information and guides are available on Magic Leap's [Creator Portal](https://creator.magicleap.com/learn/guides/webvr-webxr).
