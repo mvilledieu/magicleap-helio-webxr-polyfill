@@ -2,15 +2,20 @@
  * @author mvilledieu / http://github.com/mvilledieu
  */
 
-if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
+if ( 
+	typeof window !== 'undefined' && // For SSR
+	typeof window.navigator !== 'undefined' &&
+	/(Helio)/g.test( navigator.userAgent ) && 
+	'xr' in navigator 
+) {
 
-	console.log( "Helio WebXR Polyfill (Lumin 0.96.0)" );
+	console.log( 'Helio WebXR Polyfill (Lumin 0.96.0)' );
 
 	// WebXRManager - XR.supportSession() Polyfill - WebVR.js line 147
 
 	if (
-		"supportsSession" in navigator.xr === false &&
-    "supportsSessionMode" in navigator.xr
+		'supportsSession' in navigator.xr === false &&
+    'supportsSessionMode' in navigator.xr
 	) {
 
 		navigator.xr.supportsSession = function ( sessionType ) {
@@ -22,7 +27,7 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 	}
 
-	if ( "requestSession" in navigator.xr ) {
+	if ( 'requestSession' in navigator.xr ) {
 
 		const tempRequestSession = navigator.xr.requestSession.bind( navigator.xr );
 
@@ -101,7 +106,7 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 							res.forEach( function (xrInputSource ) {
 
-								Object.defineProperty( xrInputSource, "targetRaySpace", {
+								Object.defineProperty( xrInputSource, 'targetRaySpace', {
 									get: function () {
 
 										return xrInputSource;
@@ -119,7 +124,7 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 						session.inputSources = Object.defineProperty(
 							session,
-							"inputSources",
+							'inputSources',
 							{
 								get: session.getInputSources
 							}
@@ -148,8 +153,8 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 						session.requestReferenceSpace = function () {
 
 							return tempRequestReferenceSpace( {
-								type: "stationary",
-								subtype: "floor-level"
+								type: 'stationary',
+								subtype: 'floor-level'
 							} );
 
 						};
