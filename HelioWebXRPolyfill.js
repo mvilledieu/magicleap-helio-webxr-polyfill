@@ -2,43 +2,57 @@
  * @author mvilledieu / http://github.com/mvilledieu
  */
 
-if ( 
+if (
 	typeof window !== 'undefined' && // For SSR
 	typeof window.navigator !== 'undefined' &&
-	/(Helio)/g.test( navigator.userAgent ) && 
-	'xr' in navigator 
+	/(Helio)/g.test(navigator.userAgent) &&
+	'xr' in navigator
 ) {
 
-	console.log( 'Helio WebXR Polyfill (Lumin 0.96.0)' );
+	console.log('Helio WebXR Polyfill (Lumin 0.96.0)');
 
 	// WebXRManager - XR.supportSession() Polyfill - WebVR.js line 147
 
 	if (
 		'supportsSession' in navigator.xr === false &&
-    'supportsSessionMode' in navigator.xr
+		'supportsSessionMode' in navigator.xr
 	) {
 
-		navigator.xr.supportsSession = function ( sessionType ) {
+		navigator.xr.supportsSession = function (sessionType) {
 
 			// Force using immersive-ar
-			return navigator.xr.supportsSessionMode( 'immersive-ar' );
+			return navigator.xr.supportsSessionMode('immersive-ar');
 
 		};
 
 	}
 
-	if ( 'requestSession' in navigator.xr ) {
+	if ('requestDevice' in navigator.xr === false) {
 
-		const tempRequestSession = navigator.xr.requestSession.bind( navigator.xr );
+		navigator.xr.requestDevice = function () {
 
-		navigator.xr.requestSession = function ( sessionType ) {
+			return new Promise(function (resolve, reject) {
 
-			return new Promise( function ( resolve, reject ) {
+				resolve(navigator.xr);
 
-				tempRequestSession( {
-					mode: 'immersive-ar' // Force using immersive-ar
-				} )
-					.then( function ( session ) {
+			});
+
+		};
+
+	}
+
+	if ('requestSession' in navigator.xr) {
+
+		const tempRequestSession = navigator.xr.requestSession.bind(navigator.xr);
+
+		navigator.xr.requestSession = function (sessionType) {
+
+			return new Promise(function (resolve, reject) {
+
+				tempRequestSession({
+						mode: 'immersive-ar' // Force using immersive-ar
+					})
+					.then(function (session) {
 
 						// WebXRManager - xrFrame.getPose() Polyfill - line 279
 
@@ -46,28 +60,32 @@ if (
 							session
 						);
 
-						session.requestAnimationFrame = function ( callback ) {
+						session.requestAnimationFrame = function (callback) {
 
-							return tempRequestAnimationFrame( function ( time, frame ) {
+							return tempRequestAnimationFrame(function (time, frame) {
 
 								// WebXRManager - xrFrame.getViewerPose() Polyfill - line 279
 								// Transforms view.viewMatrix to view.transform.inverse.matrix
 
-								const tempGetViewerPose = frame.getViewerPose.bind( frame );
+								const tempGetViewerPose = frame.getViewerPose.bind(frame);
 
-								frame.getViewerPose = function ( referenceSpace ) {
+								frame.getViewerPose = function (referenceSpace) {
 
-									const pose = tempGetViewerPose( referenceSpace );
+									const pose = tempGetViewerPose(referenceSpace);
 
-									pose.views.forEach( function ( view ) {
+									pose.views.forEach(function (view) {
 
-										view.transform = {
-											inverse: {
-												matrix: view.viewMatrix
-											}
-										};
+										if ('viewMatrix' in view) {
 
-									} );
+											view.transform = {
+												inverse: {
+													matrix: view.viewMatrix
+												}
+											};
+
+										}
+
+									});
 
 									return pose;
 
@@ -75,46 +93,57 @@ if (
 
 								// WebXRManager - xrFrame.getPose() Polyfill - line 259
 
-								frame.getPose = function ( targetRaySpace, referenceSpace ) {
+								frame.getPose = function (targetRaySpace, referenceSpace) {
 
 									const inputPose = frame.getInputPose(
 										targetRaySpace,
 										referenceSpace
 									);
 
-									inputPose.transform = {
-										matrix: inputPose.targetRay.transformMatrix
-									};
+									if (
+										'targetRay' in inputPose &&
+										'transformMatrix' in inputPose.targetRay
+									) {
+
+										inputPose.transform = {
+											matrix: inputPose.targetRay.transformMatrix
+										};
+
+									}
 
 									return inputPose;
 
 								};
 
-								callback( time, frame );
+								callback(time, frame);
 
-							} );
+							});
 
 						};
 
 						// WebXRManager - xrFrame.getPose( inputSource.targetRaySpace, referenceSpace) Polyfill - line 279
 
-						const tempGetInputSources = session.getInputSources.bind( session );
+						const tempGetInputSources = session.getInputSources.bind(session);
 
 						session.getInputSources = function () {
 
 							const res = tempGetInputSources();
 
-							res.forEach( function (xrInputSource ) {
+							res.forEach(function (xrInputSource) {
 
-								Object.defineProperty( xrInputSource, 'targetRaySpace', {
-									get: function () {
+								if (
+									xrInputSource &&
+									'targetRaySpace' in xrInputSource === false
+								) {
 
-										return xrInputSource;
+									Object.defineProperty(xrInputSource, 'targetRaySpace', {
+										value: xrInputSource,
+										configurable: true
+									});
 
-									}
-								} );
+								}
 
-							} );
+							});
 
 							return res;
 
@@ -124,51 +153,76 @@ if (
 
 						session.inputSources = Object.defineProperty(
 							session,
-							'inputSources',
-							{
-								get: session.getInputSources
+							'inputSources', {
+								get: session.getInputSources,
 							}
 						);
 
 						// WebXRManager - xrSession.updateRenderState() Polyfill Line 129
 
-						session.updateRenderState = function ( { baseLayer } ) {
+						if (session) {
 
-							session.baseLayer = baseLayer;
+							session.updateRenderState = function ({
+								baseLayer
+							}) {
 
-							// WebXRManager - xrSession.renderState.baseLayer Polyfill Line 219
+								if (!baseLayer) return;
 
-							session.renderState = {
-								baseLayer: baseLayer
+								if ('baseLayer' in session) {
+
+									session.baseLayer = baseLayer;
+
+								}
+
+								// WebXRManager - xrSession.renderState.baseLayer Polyfill Line 219
+
+								session.renderState = {
+									baseLayer: baseLayer
+								};
+
 							};
 
-						};
+						}
 
 						// WebXRManager - xrSession.requestReferenceSpace() Polyfill Line 130
 
-						const tempRequestReferenceSpace = session.requestReferenceSpace.bind(
-							session
-						);
+						if ('requestReferenceSpace' in session) {
 
-						session.requestReferenceSpace = function () {
+							const tempRequestReferenceSpace = session.requestReferenceSpace.bind(
+								session
+							);
+	
+							const getTempRequestReferenceSpace = function () {
+	
+								return tempRequestReferenceSpace({
+									type: 'stationary',
+									subtype: 'floor-level'
+								});
+	
+							};
+	
+							session.requestReferenceSpace = getTempRequestReferenceSpace;
+	
+							// Aframe a-scene.js Line 200
+	
+							if ('requestFrameOfReference' in session === false) {
+	
+								session.requestFrameOfReference = getTempRequestReferenceSpace;
+	
+							}
 
-							return tempRequestReferenceSpace( {
-								type: 'stationary',
-								subtype: 'floor-level'
-							} );
+						}
 
-						};
+						resolve(session);
 
-						resolve( session );
+					})
+					.catch(function (error) {
 
-					} )
-					.catch( function ( error ) {
+						return reject(error);
 
-						return reject( error );
+					});
 
-					} );
-
-			} );
+			});
 
 		};
 
