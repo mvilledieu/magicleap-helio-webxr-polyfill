@@ -1,6 +1,6 @@
 {
   "name": "magicleap-helio-webxr-polyfill",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Polyfill providing backward compatibility in between the newest WebXR API and the WebXR API currently implemented in Helio (Lumin 0.96.0).",
   "main": "HelioWebXRPolyfill.js",
   "scripts": {
