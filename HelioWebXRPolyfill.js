@@ -2,7 +2,12 @@
  * @author mvilledieu / http://github.com/mvilledieu
  */
 
-if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
+if ( 
+		typeof window !== "undefined" && // For SSR	
+		typeof window.navigator !== "undefined" &&	
+		/(Helio)/g.test( navigator.userAgent ) && 
+		"xr" in navigator 
+	) {
 
 	console.log( "Helio WebXR Polyfill (Lumin 0.97.0)" );
 
@@ -18,7 +23,7 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 		navigator.xr.supportsSession = function ( sessionType ) {
 
 			// Force using immersive-ar
-			return navigator.xr.supportsSessionMode( 'immersive-ar' );
+			return navigator.xr.supportsSessionMode( "immersive-ar" );
 
 		};
 
@@ -60,11 +65,15 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 									pose.views.forEach( function ( view ) {
 
-										view.transform = {
-											inverse: {
-												matrix: view.viewMatrix
-											}
-										};
+										if ("viewMatrix" in view) {
+
+											view.transform = {
+												inverse: {
+													matrix: view.viewMatrix
+												}
+											};
+
+										}
 
 									} );
 
@@ -85,9 +94,16 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 											referenceSpace
 										);
 
-										inputPose.transform = {
-											matrix: inputPose.targetRay.transformMatrix
-										};
+										if (
+											"targetRay" in inputPose &&
+											"transformMatrix" in inputPose.targetRay
+										) {
+
+											inputPose.transform = {
+												matrix: inputPose.targetRay.transformMatrix
+											};
+
+										}
 
 										return inputPose;
 
@@ -115,13 +131,16 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 							res.forEach( function (xrInputSource ) {
 
-								Object.defineProperty( xrInputSource, "targetRaySpace", {
-									get: function () {
+								if (
+									xrInputSource &&
+									"targetRaySpace" in xrInputSource === false
+								) {
 
-										return xrInputSource;
-
-									}
-								} );
+									Object.defineProperty(xrInputSource, 'targetRaySpace', {
+										value: xrInputSource,
+										configurable: true
+									});
+								}
 
 							} );
 
@@ -141,7 +160,7 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 						// WebXRManager - xrSession.updateRenderState() Polyfill Line 129
 
-						if (isHelio96) {
+						if (isHelio96 && session) {
 
 							session.updateRenderState = function ( { baseLayer } ) {
 
@@ -159,18 +178,32 @@ if ( /(Helio)/g.test( navigator.userAgent ) && "xr" in navigator ) {
 
 						// WebXRManager - xrSession.requestReferenceSpace() Polyfill Line 130
 
-						const tempRequestReferenceSpace = session.requestReferenceSpace.bind(
-							session
-						);
+						if ("requestReferenceSpace" in session) {
 
-						session.requestReferenceSpace = function () {
+							const tempRequestReferenceSpace = session.requestReferenceSpace.bind(
+								session
+							);
 
-							return tempRequestReferenceSpace( {
-								type: "stationary",
-								subtype: "floor-level"
-							} );
+							const getTempRequestReferenceSpace = function () {
 
-						};
+								return tempRequestReferenceSpace({
+									type: "stationary",
+									subtype: "floor-level"
+								});
+
+							};
+
+							session.requestReferenceSpace = getTempRequestReferenceSpace;
+
+							// Aframe a-scene.js Line 200
+
+							if ("requestFrameOfReference" in session === false) {
+
+								session.requestFrameOfReference = getTempRequestReferenceSpace;
+
+							}
+
+						}
 
 						resolve( session );
 
