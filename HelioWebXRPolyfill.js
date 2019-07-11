@@ -9,7 +9,7 @@ if (
 		"xr" in navigator 
 	) {
 
-	console.log( "Helio WebXR Polyfill (Lumin 0.97.0)" );
+	console.log( "Helio WebXR Polyfill (Lumin 0.96.0 & Lumin 0.97.0)" );
 
 	const isHelio96 = navigator.userAgent.includes("Chrome/73");
 
